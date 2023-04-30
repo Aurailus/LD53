@@ -31,16 +31,16 @@ export function ClickCheck(props: Props) {
 		if (pixel[3] > 0) props.onClick?.();
 		else {
 			canvas.current!.style.pointerEvents = 'none';
-			(document.elementFromPoint(evt.clientX, evt.clientY) as HTMLElement)?.dispatchEvent(new MouseEvent('click', evt));
+			const nextElem = document.elementFromPoint(evt.clientX, evt.clientY) as HTMLElement;
+			nextElem?.dispatchEvent(new MouseEvent('click', evt));
 			canvas.current!.style.pointerEvents = 'auto';
 		}
 	}
 
-
 	return (
-		<div class={merge(props.class, 'select-none relative')} style={props.style}>
+		<div class={merge(props.class, 'select-none interact-none relative')} style={props.style}>
 			<img class='inset-0 w-full h-full interact-none' src={props.src}/>
-			<canvas ref={canvas} class='absolute inset-0 w-full h-full' onClick={handleClickCheck} />
+			<canvas ref={canvas} class='absolute pointer-events-auto inset-0 w-full h-full' onClick={handleClickCheck} />
 		</div>
 	)
 }

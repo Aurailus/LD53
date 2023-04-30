@@ -43,7 +43,7 @@ export function ComputerScreen(props: Props) {
 			class='block text-green-300 font-computer w-[28rem] h-[16rem] p-3 pt-2 pb-0
 			absolute bottom-[29.5rem] left-20 z-0 flex flex-col font-black antialiased animate-screen_activate'>
 
-			{props.state === null && <Fragment>
+			{props.state === null && level.product != null && <Fragment>
 				<div class='flex justify-between border-b-2 border-green-300 mb-2'>
 					<p>Order #{props.randVal % 1000}</p>
 					<p>Purchased 23/10/2023</p>
@@ -92,7 +92,7 @@ export function ComputerScreen(props: Props) {
 			</Fragment>}
 
 			{props.state === 'success' && <Fragment>
-				{props.current > props.quota ? <img src={image_success} class='w-[200px] h-[200px] mx-auto mt-2'/> :
+				{(props.current > props.quota || props.current === 0) ? <img src={image_success} class='w-[200px] h-[200px] mx-auto mt-2'/> :
 					<p class='text-9xl py-8 text-center font-black'>{props.current}/{props.quota}</p>}
 				<p class='text-xl text-center font-black -mt-4 px-6'>
 					{SUCCESS_MESSAGES[props.randVal % SUCCESS_MESSAGES.length]}</p>

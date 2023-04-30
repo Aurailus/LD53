@@ -14,25 +14,24 @@ import { Checklist } from './Checklist';
 import { ComputerScreen } from './ComputerScreen';
 import { Level, LevelContext, LevelResult, ResultType } from './Level';
 
+import Clock from './Clock';
+import { merge } from './Util';
 import { Plot } from './plot/Plot';
 import { intro } from './plot/Intro';
 import { firstday } from './plot/FirstDay';
 import { ApproveDenyButtons } from './ApproveDenyButtons';
-import Clock from './Clock';
-import { merge } from './Util';
-
-export const TIME_SPEED = 8_000;
-export const TIME_HOURS = 8;
-export const TIME_MINUTES = 6;
-export const TIME_MAX = TIME_MINUTES * TIME_HOURS;
+import { secondday } from './plot/SecondDay';
+import { thirdday } from './plot/ThirdDay';
 
 export function Game() {
-	const [ plot, setPlot ] = useState<Plot | null>(firstday());
+	const [ plot, setPlot ] = useState<Plot | null>(thirdday());
 	const [ plotYielding, setPlotYielding ] = useState<null | 'complete' | 'approve' | 'deny'>(null);
 
 	const [ level, setLevel ] = useState<Level | null>(null);
 	const [ oldLevel, setOldLevel ] = useState<Level | null>(null);
-	const [ currentComplete, setCurrentComplete ] = useState<number>(0);
+	const [ complete, setComplete ] = useState<number>(0);
+	const [ mistakes, setMistakes ] = useState<number>(0);
+	const [ score, setScore ] = useState<number>(0);
 	const [ flaggedProblems, setFlaggedProblems ] = useState<Set<string>>(new Set());
 	const [ requiredEvidence, setRequiredEvidence ] = useState<number>(0);
 	const [ computerState, setComputerState ] = useState<'failure' | 'success' | null>(null);
@@ -41,9 +40,11 @@ export function Game() {
 	const [ ringPhone, setRingPhone ] = useState(false);
 	const [ uiVisible, setUiVisible ] = useState<Set<string>>(new Set([ ]));
 
-	const [ time, setTime ] = useState(0);
-	const [ timeScale, setTimeScale ] = useState(0);
-	const [ quotas, setQuotas ] = useState<number[]>([ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
+	const [ wave, setWave ] = useState(0);
+	const [ waveTicksLeft, setWaveTicksLeft ] = useState(0);
+	const [ waveTicksLeftBase, setWaveTicksLeftBase ] = useState(0);
+	const [ quotas, setQuotas ] = useState<number[]>([ 0, 0, 0, 0 ]);
+
 	const handleApprove = () => {
 		if (plotYielding === 'deny') return;
 		handleComplete('approved');
@@ -53,6 +54,15 @@ export function Game() {
 		if (plotYielding === 'approve') return;
 		handleComplete('denied');
 	};
+
+	const handlePlotComplete = () => {
+		setPlot(null);
+		setWaveTicksLeftBase(0);
+		setWaveTicksLeft(0);
+		setWave(w => w + 1);
+
+		console.warn('PLOT COMPLETE');
+	}
 
 	const handleComplete = (verdict: 'approved' | 'denied') => {
 		let result: ResultType = 'correct';
@@ -68,12 +78,18 @@ export function Game() {
 			level: JSON.parse(JSON.stringify(level)),
 			flaggedProblems,
 			result,
-			hour: Math.floor(time / TIME_MINUTES),
-			currentComplete,
-			quota: quotas[Math.floor(time / TIME_MINUTES)]
+			wave,
+			complete: complete + 1,
+			quota: quotas[Math.min(wave, quotas.length - 1)]
 		};
 
-		setCurrentComplete(l => l + 1);
+		if (result === 'correct') {
+			setComplete(l => l + 1);
+			setScore(s => s + 1);
+		}
+		else {
+			setMistakes(m => m + 1);
+		}
 		setOldLevel(level);
 		setComputerState(result === 'correct' ? 'success' : 'failure')
 		setLevel(null);
@@ -95,6 +111,10 @@ export function Game() {
 		});
 	}, []);
 
+	useEffect(() => {
+		console.warn(score);
+	}, [ score ]);
+
 	const levelContext = useMemo(() => ({
 		...level,
 		problemsSet: new Set(level?.problems ?? []),
@@ -110,8 +130,7 @@ export function Game() {
 	const processPlotEvent = (ret?: any) => {
 		if (!plot) return;
 		const { done, value } = plot.next(ret);
-		if (done) setPlot(null);
-		if (!value) return;
+		if (!value) return handlePlotComplete();
 
 		switch (value.type) {
 		// default:
@@ -132,10 +151,7 @@ export function Game() {
 			setDialogue(value.text);
 			break;
 		case 'level':
-			// setOldLevel((oldLevel) => {
-				setLevel({ ...value.level });
-
-			// })
+			setLevel({ ...value.level });
 			setFlaggedProblems(new Set());
 			processPlotEvent();
 			break;
@@ -156,12 +172,16 @@ export function Game() {
 			setRequiredEvidence(value.amount);
 			processPlotEvent();
 			break;
-		case 'set_time_speed':
-			setTimeScale(value.scale);
+		case 'set_wave_ticks':
+			setWaveTicksLeftBase(value.ticks);
+			setWaveTicksLeft(value.ticks);
 			processPlotEvent();
 			break;
-		case 'set_time':
-			setTime(value.time);
+		case 'set_wave':
+			setWave(value.wave);
+			if (waveTicksLeft > 0) setScore(s => s + Math.max(waveTicksLeft, 3));
+			setWaveTicksLeft(waveTicksLeftBase);
+			setComplete(0);
 			processPlotEvent();
 			break;
 		case 'set_quota':
@@ -175,32 +195,34 @@ export function Game() {
 	useEffect(() => processPlotEvent(), [ plot ]);
 
 	useEffect(() => {
-		if (timeScale === 0) return;
-		const timeout = setTimeout(() => {
-			setTime((time) => {
-				const newTime = time + 1;
-				if (newTime % TIME_MINUTES === 0) {
-					setCurrentComplete((levelsThisHour) => {
-						const quota = quotas[Math.max(Math.min(Math.floor(time / TIME_MINUTES) - 1, quotas.length - 1), 0)];
-						if (levelsThisHour >= quota) {
-							return levelsThisHour - quota;
-						}
-						else {
-							setCurrentComplete(0);
-							console.error('YOU LOSE');
-							return 0;
-						}
-					})
-				}
-				return newTime;
+		if (waveTicksLeftBase === 0) return;
+		if (waveTicksLeft >= 0) {
+			const timeout = setTimeout(() => setWaveTicksLeft(waveTicksLeft - 1), 1000);
+			return () => clearTimeout(timeout);
+		}
+		else {
+			setWave((wave) => {
+				const newWave = wave + 1;
+
+				setComplete((currentComplete) => {
+					const quota = quotas[Math.min(wave, quotas.length - 1)];
+					if (currentComplete < quota) setMistakes(m => m + (quota - currentComplete));
+					return 0;
+				});
+
+				return newWave;
 			});
-		}, TIME_SPEED / timeScale);
-		return () => clearTimeout(timeout);
-	}, [ time, timeScale, quotas ]);
+
+			setWaveTicksLeft(waveTicksLeftBase);
+		}
+	}, [ waveTicksLeft, waveTicksLeftBase, quotas ]);
 
 	const ProductComponent = level?.product?.component!;
+	const OldProductComponent = oldLevel?.product?.component!;
 
 	const randVal = useMemo(() => Math.floor(Math.random() * 10000) + 100, [ level ]);
+
+	const currentQuota = quotas[Math.min(wave, quotas.length - 1)];
 
 	return (
 		<div class='w-screen h-screen bg-black overflow-hidden flex flex-col overflow-hidden'>
@@ -221,33 +243,39 @@ export function Game() {
 						onEnd={() => processPlotEvent()}
 						dialogue={dialogue}/>
 
-					{level !== null && <LevelContext.Provider value={levelContext!}>
+					<LevelContext.Provider value={levelContext!}>
 						{/* Computer Screen */}
 						{uiVisible.has('computer') && <ComputerScreen randVal={randVal} state={computerState}
-							current={currentComplete} quota={quotas[Math.min(Math.floor(time / TIME_MINUTES), quotas.length - 1)]}/>}
+							current={complete} quota={currentQuota}/>}
 
 						{/* Product */}
-						<div key={level} class='overflow-auto w-auto h-auto absolute left-1/2 animate-product_on
+						{level !== null && <div key={level} class='overflow-auto w-auto h-auto absolute left-1/2 animate-product_on
 						-translate-x-1/2 will-change-transform'
 							style={{ bottom: `${56 + (level.product.yOffset ?? 0) * 4}px` }}>
 							<ProductComponent/>
-						</div>
-
-					</LevelContext.Provider>}
+						</div>}
+					</LevelContext.Provider>
 
 					{/* Old Product */}
 					{oldLevel !== null && <LevelContext.Provider value={oldLevelContext!}>
 						<div key={oldLevel} class='overflow-auto w-auto h-auto absolute left-1/2
 							animate-product_off left-1/2 -translate-x-1/2 will-change-transform'
 							style={{ bottom: `${56 + (oldLevel.product.yOffset ?? 0) * 4}px` }}>
-							<ProductComponent/>
+							<OldProductComponent/>
 						</div>
 					</LevelContext.Provider>}
 
-					{/* Timer */}
-					{uiVisible.has('clock') && <Clock time={time}
-						quota={quotas[Math.min(Math.floor(time / TIME_MINUTES), quotas.length - 1)]}
-						current={currentComplete}/>}
+					{/* Time warning overlay */}
+					{waveTicksLeft <= 10 && waveTicksLeft % 2 == 0 &&
+						<div class='flex fixed inset-0 items-center justify-center will-change-transform interact-none'>
+							<span key={Math.floor(waveTicksLeft / 3)} class={merge('text-5xl animate-time_flash m-0',
+								complete >= currentQuota ? 'text-green-200/40' : 'text-red-500/40')}>{waveTicksLeft / 2}
+								</span>
+						</div>
+					}
+
+					{/* Clock */}
+					<Clock current={complete} quota={currentQuota} ticks={waveTicksLeft}/>
 				</div>
 
 				{/* Right (Info) Area */}

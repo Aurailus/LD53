@@ -29,7 +29,7 @@ export interface LevelResult {
 	flaggedProblems: Set<string>;
 	verdict: 'approved' | 'denied';
 	result: ResultType;
-	hour: number;
-	currentComplete: number;
+	wave: number;
+	complete: number;
 	quota: number;
 }

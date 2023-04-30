@@ -2,75 +2,71 @@ import { Fragment, h } from 'preact';
 import { merge } from '../Util';
 import { ClickCheck } from './ClickCheck';
 import { useState } from 'preact/hooks';
-import type { Product } from './Product';
+import { Product, generateNonConflictingProblems } from './Product';
+import { useLevel } from '../Level';
 
 import image_reference from '@res/headset/reference.png';
 import image_base from '@res/headset/base.png';
-import image_mod_art from '@res/cartridge/mod_art.png';
-import image_mod_console from '@res/cartridge/mod_console.png';
-import image_mod_mature from '@res/cartridge/mod_mature.png';
-import image_mod_region from '@res/cartridge/mod_region.png';
-import image_mod_seal from '@res/cartridge/mod_seal.png';
-import image_back from '@res/cartridge/back.png';
-import image_back_cracker from '@res/cartridge/back_cracker.png';
-import image_mod_brand from '@res/cartridge/mod_brand.png';
-import image_inside from '@res/cartridge/inside.png';
-import image_inside_cracker from '@res/cartridge/inside_cracker.png';
-import image_mod_circuitboard from '@res/cartridge/mod_circuitboard.png';
+import image_base_mod_strap from '@res/headset/base_mod_strap.png';
+import image_flipped_on from '@res/headset/flipped_on.png';
+import image_flipped_off from '@res/headset/flipped_off.png';
+import image_flipped_mod_strap from '@res/headset/flipped_mod_strap.png';
+import image_controller from '@res/headset/controller.png';
+import image_controller_mod_dpad from '@res/headset/controller_mod_dpad.png';
+import image_controller_mod_straps from '@res/headset/controller_mod_straps.png';
+import image_base_mod_logo from '@res/headset/base_mod_logo.png';
 
 const problems = [
-	{ identifier: 'art', description: 'Product has correct art.' },
-	{ identifier: 'console', description: 'Product has the correct console name.' },
-	{ identifier: 'rating', description: 'Product has the correct age rating.' },
-	{ identifier: 'region', description: 'Product has the correct region.' },
-	{ identifier: 'seal', description: 'Product has a seal of approval.' },
-	{ identifier: 'brand', description: 'Product is marked on the reverse.' },
-	{ identifier: 'circuitboard', description: 'Product has all of its internals intact.' },
-	{ identifier: 'cracker', description: 'Product is free of food residue.' }
+	{ identifier: 'broken', description: 'Turns on and lights up.' },
+	{ identifier: 'strapless', description: 'Headstrap included.' },
+	{ identifier: 'color', description: 'Color matches reference image.' },
+	{ identifier: 'logo', description: 'Logo is oriented correctly.' },
+	// { identifier: 'controllers', description: 'Controllers are included.' },
+	{ identifier: 'straps', description: 'Controllers have wrist straps.' },
+	{ identifier: 'dpad', description: 'Controllers have analog input.' },
+	// { identifier: 'amogos', description: 'Product is not sus.', special: true }
 ]
 
 export function Headset() {
-	const problems = new Set<string>([ ]);
+	const { problemsSet: pr } = useLevel();
 
-	const [ state, setState ] = useState<'front' | 'back' | 'inside'>('front');
+	const [ state, setState ] = useState<'front' | 'back' | 'controllers'>('front');
 
 	return (
-		<div class={merge('w-128 aspect-square relative', problems.has('color') && 'saturate-200')}>
+		<div class={merge('w-128 aspect-square relative', pr.has('color') && 'hue-rotate-30')}>
 			{state === 'front' ?
 				<Fragment>
-					<ClickCheck class='absolute inset-0 w-full' src={image_base} onClick={() => setState('back')}/>
+					<ClickCheck class='!absolute inset-0 w-full' src={image_base} onClick={() => setState('back')}/>
+					{!pr.has('strapless') && <img class='absolute inset-0 w-full interact-none' src={image_base_mod_strap}/>}
+					{pr.has('logo') && <img class='absolute inset-0 w-full interact-none' src={image_base_mod_logo}/>}
 				</Fragment> :
 				state === 'back' ?
 				<Fragment>
-					<ClickCheck class='absolute inset-0 w-full' src={image_back} onClick={() => setState('inside')}/>
-					{!problems.has('brand') && <ClickCheck class='absolute inset-0 w-full' src={image_mod_brand}
-						onClick={() => console.log('brand')}/>}
-					{problems.has('cracker') && <img class='absolute inset-0 w-full interact-none'
-						src={image_back_cracker}/>}
+					<ClickCheck class='!absolute inset-0 w-full' src={pr.has('broken') ? image_flipped_off : image_flipped_on}
+						onClick={() => setState('controllers')}/>
+					{!pr.has('strapless') && <img class='absolute inset-0 w-full interact-none' src={image_flipped_mod_strap}/>}
 				</Fragment> :
 				<Fragment>
-					<img class='absolute inset-0 w-full' src={image_inside}/>
-					{!problems.has('circuitboard') && <ClickCheck class='absolute inset-0 w-full' src={image_mod_circuitboard}
-						onClick={() => console.log('circuitboard')}/>}
-					{problems.has('cracker') && <img class='absolute inset-0 w-full interact-none'
-						src={image_inside_cracker}/>}
-				</Fragment>}
+					<ClickCheck class='!absolute inset-0 w-full' src={image_controller} onClick={() => setState('front')}/>
+					{pr.has('dpad') && <img class='absolute inset-0 w-full interact-none' src={image_controller_mod_dpad}/>}
+					{!pr.has('straps') && <img class='absolute inset-0 w-full interact-none' src={image_controller_mod_straps}/>}
+				</Fragment>
+			}
 		</div>
 	);
 }
 
 
 const product: Product = {
-	name: 'Headset',
+	name: 'Monoculus Virtual Reality VR Reality Headset For PC XBox Macintosh Gamecube Console PC Control Video Game',
 	component: Headset,
 	problems,
 	image: image_reference,
+	yOffset: -8,
 	reviews: [
 		'I love how realistic the rocks look, it\'s like I\'m really there!',
 	],
-	generateProblems() {
-		return [];
-	}
+	generateProblems: generateNonConflictingProblems(problems)
 };
 
 export default product;

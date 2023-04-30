@@ -109,6 +109,16 @@ export function* intro(): Plot {
 	};
 
 	yield {
+		type: 'level',
+		level: {
+			company: getCompany(),
+			customer: getName(),
+			problems: [ 'ears', 'tail', 'color', 'tag' ],
+			product: Plushie
+		}
+	};
+
+	yield {
 		type: 'await',
 		what: 'time',
 		time: 200,
@@ -125,15 +135,6 @@ export function* intro(): Plot {
 		]
 	};
 
-	yield {
-		type: 'level',
-		level: {
-			company: getCompany(),
-			customer: getName(),
-			problems: [ 'ears', 'tail', 'color', 'tag' ],
-			product: Plushie
-		}
-	};
 
 	yield { type: 'await', what: 'time', time: 500, };
 
@@ -196,6 +197,8 @@ export function* intro(): Plot {
 	};
 
 	yield { type: 'ui', key: 'deny', show: true }
+	yield { type: 'set_wave', wave: 2 };
+	yield { type: 'set_quota', quotas: [ 4 ] };
 
 	let level: Action = {
 		type: 'level',

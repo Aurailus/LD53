@@ -37,21 +37,18 @@ export function Plushie() {
 				<img class='absolute inset-0 w-full' src={image_base_beheaded}/>
 					{pr.has('bomb') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_bomb}
 						onClick={() => console.log('BOMB!!!')}/>}
-					{pr.has('tag') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_tag}
-						onClick={() => console.log('tag')}/>}
-					<ClickCheck class='absolute inset-0 w-full' src={pr.has('tail') ? image_mod_tail_wrong : image_mod_tail}
-						onClick={() => console.log('tail!')}/>
+					{pr.has('tag') && <img class='!absolute inset-0 w-full' src={image_mod_tag}/>}
+					<img class='absolute inset-0 w-full interact-none'
+						src={pr.has('tail') ? image_mod_tail_wrong : image_mod_tail}/>
 				</Fragment> :
 				<Fragment>
-					<ClickCheck class='!absolute inset-0 w-full' src={image_base} onClick={() => setBeheaded(true)}/>
-					<ClickCheck class='!absolute inset-0 w-full' src={pr.has('ears') ? image_mod_ear_wrong : image_mod_ear}
-						onClick={() => console.log('ears')}/>
-					{pr.has('eyes') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_eyes}
-						onClick={() => console.log('eyes!')}/>}
-					{pr.has('tag') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_tag}
-						onClick={() => console.log('tag')}/>}
-					<ClickCheck class='!absolute inset-0 w-full' src={pr.has('tail') ? image_mod_tail_wrong : image_mod_tail}
-						onClick={() => console.log('tail!')}/>
+					<ClickCheck class='!absolute inset-0 w-full' src={image_base} onClick={() => setBeheaded(pr.has('bomb'))}/>
+					<img class='!absolute inset-0 w-full interact-none'
+						src={pr.has('ears') ? image_mod_ear_wrong : image_mod_ear}/>
+					{pr.has('eyes') && <img class='!absolute inset-0 w-full interact-none' src={image_mod_eyes}/>}
+					{pr.has('tag') && <img class='!absolute inset-0 w-full interact-none' src={image_mod_tag}/>}
+					<img class='!absolute inset-0 w-full interact-none'
+						src={pr.has('tail') ? image_mod_tail_wrong : image_mod_tail}/>
 				</Fragment>}
 		</div>
 	);

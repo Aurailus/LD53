@@ -6,7 +6,7 @@ import Plushie from "../product/Plushie";
 import Headset from "../product/Headset";
 import { Action, Plot }  from './Plot';
 
-export function* firstday(): Plot {
+export function* secondday(): Plot {
 	yield { type: 'ui', key: 'info', show: true };
 	yield { type: 'ui', key: 'computer', show: true };
 	yield { type: 'ui', key: 'checklist', show: true };
@@ -29,8 +29,8 @@ export function* firstday(): Plot {
 			level: {
 				company: getCompany(),
 				customer: getName(),
-				problems: Math.random() <= 0.1 ? [] : Plushie.generateProblems(wave, 1),
-				product: Plushie
+				problems: Math.random() <= 0.1 ? [] : Headset.generateProblems(wave, 1),
+				product: Headset
 			}
 		} as Action;
 
@@ -126,11 +126,13 @@ export function* firstday(): Plot {
 		if (wave !== res.wave) break;
 	}
 
-	yield { type: 'set_wave', wave: 100 };
 	yield { type: 'set_wave_ticks', ticks: 0 };
 
 	yield { type: 'dialogue', ring: true, text: [
 		'That\'s all for today!',
 		'Great job, I\'ll be seeing you tomorrow.'
 	] };
+
+
+
 }

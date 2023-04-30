@@ -25,11 +25,11 @@ export type Action = {
 	type: 'set_quota',
 	quotas: number[];
 } | {
-	type: 'set_time_speed',
-	scale: number;
+	type: 'set_wave_ticks',
+	ticks: number;
 } | {
-	type: 'set_time',
-	time: number
+	type: 'set_wave'
+	wave: number
 }
 
 export type Plot = Generator<Action, void, any>;

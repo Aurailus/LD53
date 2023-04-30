@@ -72,8 +72,6 @@ export function Phone(props: Props) {
 			return;
 		}
 
-		console.log('should ring');
-
 		if (!ringingRef.current) {
 			ringingRef.current = setInterval(() => {
 				setRingingState(state => (state + 1) % 3);
