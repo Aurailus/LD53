@@ -2,8 +2,10 @@ import { Fragment, h } from 'preact';
 import { merge } from '../Util';
 import { ClickCheck } from './ClickCheck';
 import { useState } from 'preact/hooks';
-import type { Product, useProduct } from './Product';
+import { AdvancedProblem, Product, generateNonConflictingProblems } from './Product';
+import { useLevel } from '../Level';
 
+import image_reference from '@res/plushie/reference.png';
 import image_base from '@res/plushie/base.png';
 import image_base_beheaded from '@res/plushie/base_beheaded.png';
 import image_mod_bomb from '@res/plushie/mod_bomb.png';
@@ -14,43 +16,41 @@ import image_mod_tag from '@res/plushie/mod_tag.png';
 import image_mod_tail from '@res/plushie/mod_tail.png';
 import image_mod_tail_wrong from '@res/plushie/mod_tail_wrong.png';
 
-const problems = [
-	{ identifier: 'color', description: 'Product has correct color.' },
-	{ identifier: 'ears', description: 'Product has correct ears.' },
-	{ identifier: 'eyes', description: 'Product has button eyes.' },
-	{ identifier: 'tag', description: 'Product has the correct tag.' },
-	{ identifier: 'tail', description: 'Product has fluffy tail.' },
-	{ identifier: 'bomb', description: 'Product is not a bomb.' }
+const problems: AdvancedProblem[] = [
+	{ identifier: 'color', description: 'Color matches reference image.' },
+	{ identifier: 'ears', description: 'Ears match reference image.', conflicts: [ 'beheaded' ] },
+	{ identifier: 'tail', description: 'Tail matches reference image.' },
+	{ identifier: 'eyes', description: 'Has button eyes.', conflicts: [ 'beheaded' ] },
+	{ identifier: 'beheaded', description: 'No parts missing.', conflicts: [ 'eyes', 'ears', 'bomb' ] },
+	{ identifier: 'tag', description: 'Has a \'PTC\' tag.' },
+	{ identifier: 'bomb', description: 'Is not a bomb.', conflicts: [ 'beheaded' ], special: true }
 ]
 
 export function Plushie() {
-	const problems = new Set<string>([ 'eyes', 'ears', 'tag', 'bomb' ]);
-
-	const [ beheaded, setBeheaded ] = useState(false);
-
-	// const product = useProduct();
+	const { problemsSet: pr } = useLevel();
+	const [ beheaded, setBeheaded ] = useState(pr.has('beheaded'));
 
 	return (
-		<div class={merge('w-128 aspect-square relative', problems.has('color') && 'saturate-200')}>
+		<div class={merge('w-128 aspect-square relative', pr.has('color') && 'saturate-200')}>
 			{beheaded ?
 				<Fragment>
 				<img class='absolute inset-0 w-full' src={image_base_beheaded}/>
-					{problems.has('bomb') && <ClickCheck class='absolute inset-0 w-full' src={image_mod_bomb}
+					{pr.has('bomb') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_bomb}
 						onClick={() => console.log('BOMB!!!')}/>}
-					{problems.has('tag') && <ClickCheck class='absolute inset-0 w-full' src={image_mod_tag}
+					{pr.has('tag') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_tag}
 						onClick={() => console.log('tag')}/>}
-					<ClickCheck class='absolute inset-0 w-full' src={problems.has('tail') ? image_mod_tail_wrong : image_mod_tail}
+					<ClickCheck class='absolute inset-0 w-full' src={pr.has('tail') ? image_mod_tail_wrong : image_mod_tail}
 						onClick={() => console.log('tail!')}/>
 				</Fragment> :
 				<Fragment>
-					<ClickCheck class='absolute inset-0 w-full' src={image_base} onClick={() => setBeheaded(true)}/>
-					<ClickCheck class='absolute inset-0 w-full' src={problems.has('ears') ? image_mod_ear_wrong : image_mod_ear}
+					<ClickCheck class='!absolute inset-0 w-full' src={image_base} onClick={() => setBeheaded(true)}/>
+					<ClickCheck class='!absolute inset-0 w-full' src={pr.has('ears') ? image_mod_ear_wrong : image_mod_ear}
 						onClick={() => console.log('ears')}/>
-					{problems.has('eyes') && <ClickCheck class='absolute inset-0 w-full' src={image_mod_eyes}
+					{pr.has('eyes') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_eyes}
 						onClick={() => console.log('eyes!')}/>}
-					{problems.has('tag') && <ClickCheck class='absolute inset-0 w-full' src={image_mod_tag}
+					{pr.has('tag') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_tag}
 						onClick={() => console.log('tag')}/>}
-					<ClickCheck class='absolute inset-0 w-full' src={problems.has('tail') ? image_mod_tail_wrong : image_mod_tail}
+					<ClickCheck class='!absolute inset-0 w-full' src={pr.has('tail') ? image_mod_tail_wrong : image_mod_tail}
 						onClick={() => console.log('tail!')}/>
 				</Fragment>}
 		</div>
@@ -63,9 +63,13 @@ const product: Product = {
 	component: Plushie,
 	problems,
 	yOffset: 8,
+	image: image_reference,
 	reviews: [
-		'I eat one of these things every day. I love the taste of the fabric :) 5/5 I eat one of these things every day. I love the taste of the fabric :) 5/5'
-	]
+		'I eat one of these things every day. I love the taste of the fabric :) 5/5',
+		'Very cute, but the fabric is a bit too chewy. 4/5',
+		'I don\'t like how it stares at me with it\'s mournful eyes'
+	],
+	generateProblems: generateNonConflictingProblems(problems)
 };
 
 export default product;

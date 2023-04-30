@@ -24,7 +24,7 @@ export interface Company {
 
 const rng = seedrandom('company');
 
-export default CompanyNames.map((name: string, i): Company => {
+export const Companies = CompanyNames.map((name: string, i): Company => {
 	const numConditions = Math.floor(rng() * 3 + 1);
 	const conditions: CompanyCondition[] = [];
 
@@ -41,3 +41,7 @@ export default CompanyNames.map((name: string, i): Company => {
 		conditions
 	}
 });
+
+export function getCompany() {
+	return Companies[Math.floor(rng() * CompanyNames.length)];
+}

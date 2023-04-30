@@ -38,10 +38,9 @@ export function ClickCheck(props: Props) {
 
 
 	return (
-		<canvas ref={canvas}
-			class={merge(props.class, 'select-none')}
-			style={props.style}
-			onClick={handleClickCheck}
-		/>
+		<div class={merge(props.class, 'select-none relative')} style={props.style}>
+			<img class='inset-0 w-full h-full interact-none' src={props.src}/>
+			<canvas ref={canvas} class='absolute inset-0 w-full h-full' onClick={handleClickCheck} />
+		</div>
 	)
 }

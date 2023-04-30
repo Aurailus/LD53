@@ -4,6 +4,7 @@ import { ClickCheck } from './ClickCheck';
 import { useState } from 'preact/hooks';
 import type { Product } from './Product';
 
+import image_reference from '@res/headset/reference.png';
 import image_base from '@res/headset/base.png';
 import image_mod_art from '@res/cartridge/mod_art.png';
 import image_mod_console from '@res/cartridge/mod_console.png';
@@ -63,9 +64,13 @@ const product: Product = {
 	name: 'Headset',
 	component: Headset,
 	problems,
+	image: image_reference,
 	reviews: [
 		'I love how realistic the rocks look, it\'s like I\'m really there!',
-	]
+	],
+	generateProblems() {
+		return [];
+	}
 };
 
 export default product;

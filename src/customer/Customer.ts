@@ -125,7 +125,8 @@ export const LastNames = [
 	'Barclay',
 	'Kim',
 	'Paris',
-	'Janeway'
+	'Janeway',
+	'Coombs'
 ];
 
 export function getName() {

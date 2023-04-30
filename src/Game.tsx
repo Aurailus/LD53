@@ -1,7 +1,7 @@
 import { h } from 'preact';
-import { useCallback, useMemo, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 
-import Companies, { Company } from './company/Company';
+import { Company } from './company/Company';
 import { getName } from './customer/Customer';
 
 import background from '@res/room/background.png';
@@ -9,138 +9,261 @@ import conveyor from '@res/room/conveyor.png';
 import toolbox_back from '@res/room/toolbox_back.png';
 
 import { Info } from './Info';
-import { ActiveProblems, Product, ProductContext, Tool } from './product/Product';
-
-import Plushie from './product/Plushie';
-import Cartridge from './product/Cartridge';
-import Headset from './product/Headset';
+import { Phone } from './Phone';
 import { Checklist } from './Checklist';
+import { ComputerScreen } from './ComputerScreen';
+import { Level, LevelContext, LevelResult, ResultType } from './Level';
+
+import { Plot } from './plot/Plot';
+import { intro } from './plot/Intro';
+import { firstday } from './plot/FirstDay';
+import { ApproveDenyButtons } from './ApproveDenyButtons';
+import Clock from './Clock';
 import { merge } from './Util';
 
-export function Game() {
-	const [ product, setProduct ] = useState<Product>(Plushie);
-	const [ problems, setActiveProblems ] = useState<ActiveProblems>(
-		product.problems.map(p => ({ identifier: p.identifier, found: false })));
-	const [ tool, setTool ] = useState<Tool>({ type: 'hand' });
-	const [ company, setCompany ] = useState<Company>(Companies[Math.floor(Math.random() * Companies.length)]);
-	const [ customer, setCustomer ] = useState(getName());
+export const TIME_SPEED = 8_000;
+export const TIME_HOURS = 8;
+export const TIME_MINUTES = 6;
+export const TIME_MAX = TIME_MINUTES * TIME_HOURS;
 
-	const onProblem = useCallback((identifier: string) => {
-		setActiveProblems((problems) => {
-			const newProblems = JSON.parse(JSON.stringify(problems)) as ActiveProblems;
-			const prob = newProblems.find(p => p.identifier === identifier);
-			if (prob) {
-				prob.found = true;
-				setTool({ type: 'hand' });
-			}
+export function Game() {
+	const [ plot, setPlot ] = useState<Plot | null>(firstday());
+	const [ plotYielding, setPlotYielding ] = useState<null | 'complete' | 'approve' | 'deny'>(null);
+
+	const [ level, setLevel ] = useState<Level | null>(null);
+	const [ oldLevel, setOldLevel ] = useState<Level | null>(null);
+	const [ currentComplete, setCurrentComplete ] = useState<number>(0);
+	const [ flaggedProblems, setFlaggedProblems ] = useState<Set<string>>(new Set());
+	const [ requiredEvidence, setRequiredEvidence ] = useState<number>(0);
+	const [ computerState, setComputerState ] = useState<'failure' | 'success' | null>(null);
+
+	const [ dialogue, setDialogue ] = useState<string[]>([]);
+	const [ ringPhone, setRingPhone ] = useState(false);
+	const [ uiVisible, setUiVisible ] = useState<Set<string>>(new Set([ ]));
+
+	const [ time, setTime ] = useState(0);
+	const [ timeScale, setTimeScale ] = useState(0);
+	const [ quotas, setQuotas ] = useState<number[]>([ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
+	const handleApprove = () => {
+		if (plotYielding === 'deny') return;
+		handleComplete('approved');
+	};
+
+	const handleDeny = () => {
+		if (plotYielding === 'approve') return;
+		handleComplete('denied');
+	};
+
+	const handleComplete = (verdict: 'approved' | 'denied') => {
+		let result: ResultType = 'correct';
+		if (level?.problems.length === 0 && verdict === 'denied') result = 'correct';
+		else if ((level?.problems.length === 0) || ((level?.problems.length ?? 0) > 0 && verdict === 'denied'))
+			result = 'incorrect_verdict';
+		else if ([...flaggedProblems.keys()].filter(key => !level?.problems.includes(key)).length)
+			result = 'incorrect_invalid_evidence';
+		else result = 'correct';
+
+		const level_result: LevelResult = {
+			verdict,
+			level: JSON.parse(JSON.stringify(level)),
+			flaggedProblems,
+			result,
+			hour: Math.floor(time / TIME_MINUTES),
+			currentComplete,
+			quota: quotas[Math.floor(time / TIME_MINUTES)]
+		};
+
+		setCurrentComplete(l => l + 1);
+		setOldLevel(level);
+		setComputerState(result === 'correct' ? 'success' : 'failure')
+		setLevel(null);
+		setTimeout(() => setOldLevel(null), 1000);
+		setTimeout(() => setComputerState(null), 800);
+
+		if (plotYielding === 'complete' || plotYielding === 'approve' || plotYielding === 'deny') {
+			setPlotYielding(null);
+			processPlotEvent(level_result);
+		}
+	}
+
+	const handleSelectProblem = useCallback((identifier: string) => {
+		setFlaggedProblems((problems) => {
+			const newProblems = new Set(problems);
+			if (newProblems.has(identifier)) newProblems.delete(identifier);
+			else newProblems.add(identifier);
 			return newProblems;
 		});
 	}, []);
 
-	const handleSelectProblem = useCallback((identifier: string) => {
-		console.log('selet ples', identifier);
-		setTool((current: Tool) => {
-			if (current.type === 'test' && current.problem === identifier) {
-				return { type: 'hand' };
+	const levelContext = useMemo(() => ({
+		...level,
+		problemsSet: new Set(level?.problems ?? []),
+		flaggedProblems: flaggedProblems
+	}) as LevelContext, [ level, flaggedProblems ]);
+
+	const oldLevelContext = useMemo(() => ({
+		...oldLevel,
+		problemsSet: new Set(oldLevel?.problems ?? []),
+		flaggedProblems: new Set()
+	}) as LevelContext, [ oldLevel ]);
+
+	const processPlotEvent = (ret?: any) => {
+		if (!plot) return;
+		const { done, value } = plot.next(ret);
+		if (done) setPlot(null);
+		if (!value) return;
+
+		switch (value.type) {
+		// default:
+		// 	console.warn('UNHANDLED PLOT TYPE %s', value.type);
+		// 	break;
+		case 'await':
+			switch (value.what) {
+				default:
+					setPlotYielding(value.what);
+					break;
+				case 'time':
+					setTimeout(() => processPlotEvent(), value.time);
+					break;
 			}
-			else {
-				return { type: 'test', problem: identifier };
-			}
-		});
-	}, []);
+			break;
+		case 'dialogue':
+			setRingPhone(value.ring ?? false);
+			setDialogue(value.text);
+			break;
+		case 'level':
+			// setOldLevel((oldLevel) => {
+				setLevel({ ...value.level });
 
-	const ctx = useMemo(() => ({
-		product,
-		problems,
-		tool,
-		setTool,
-		onProblem
-	}), [ product, problems, tool, onProblem, setTool ]);
+			// })
+			setFlaggedProblems(new Set());
+			processPlotEvent();
+			break;
+		case 'ui':
+			setUiVisible((current) => {
+				const newSet = new Set(current);
+				if (value.show) newSet.add(value.key);
+				else newSet.delete(value.key);
+				return newSet;
+			});
+			processPlotEvent();
+			break;
+		case 'flag_problem':
+			handleSelectProblem(value.key);
+			processPlotEvent();
+			break;
+		case 'required_evidence':
+			setRequiredEvidence(value.amount);
+			processPlotEvent();
+			break;
+		case 'set_time_speed':
+			setTimeScale(value.scale);
+			processPlotEvent();
+			break;
+		case 'set_time':
+			setTime(value.time);
+			processPlotEvent();
+			break;
+		case 'set_quota':
+			setQuotas(value.quotas);
+			processPlotEvent();
+			break;
+		}
 
-	const ProductComponent = product.component;
+	}
 
-	// return <h1 class='bg-red-500'>Hi there :)</h1>
+	useEffect(() => processPlotEvent(), [ plot ]);
+
+	useEffect(() => {
+		if (timeScale === 0) return;
+		const timeout = setTimeout(() => {
+			setTime((time) => {
+				const newTime = time + 1;
+				if (newTime % TIME_MINUTES === 0) {
+					setCurrentComplete((levelsThisHour) => {
+						const quota = quotas[Math.max(Math.min(Math.floor(time / TIME_MINUTES) - 1, quotas.length - 1), 0)];
+						if (levelsThisHour >= quota) {
+							return levelsThisHour - quota;
+						}
+						else {
+							setCurrentComplete(0);
+							console.error('YOU LOSE');
+							return 0;
+						}
+					})
+				}
+				return newTime;
+			});
+		}, TIME_SPEED / timeScale);
+		return () => clearTimeout(timeout);
+	}, [ time, timeScale, quotas ]);
+
+	const ProductComponent = level?.product?.component!;
+
+	const randVal = useMemo(() => Math.floor(Math.random() * 10000) + 100, [ level ]);
+
 	return (
-		<ProductContext.Provider value={ctx}>
-			<div class='w-screen h-screen bg-black overflow-hidden flex flex-col'>
-				{/* Header */}
-				<div class='w-screen h-16 shrink-0 bg-gray-700'>
+		<div class='w-screen h-screen bg-black overflow-hidden flex flex-col overflow-hidden'>
+			{/* Main Area */}
+			<div class='w-screen h-auto flex-grow overflow-hidden grid bg-[size:1920px,1080px] overflow-hidden relative'
+				style={{ backgroundImage: `url(${background})`, backgroundPosition: 'bottom left', gridTemplateColumns: '1fr min(33vw, 496px)' }}>
 
-				</div>
+				<div class={merge('absolute left-0 right-0 h-64 w-[300vw] bg-contain interact-none max-w-none',
+					'max-h-none bottom-0 left-0 will-change-transform', oldLevel !== null && 'animate-conveyor_move')}
+					style={{ backgroundImage: `url(${conveyor})`, transitionDuration: `${1000}ms` }}/>
 
-				{/* Main Area */}
-				<div class='w-screen h-auto flex-grow overflow-hidden grid bg-[size:1920px,1080px]'
-					style={{ backgroundImage: `url(${background})`, backgroundPosition: 'bottom left', gridTemplateColumns: '1fr min(33vw, 496px)' }}>
+				{/* Left (Game) Area */}
+				<div class='relative'>
 
-					<div class='absolute left-0 right-0 h-72 bg-contain interact-none max-w-none max-h-none w-full bottom-0'
-						style={{ backgroundImage: `url(${conveyor})` }}/>
+					{/* Phone */}
+					<Phone state={dialogue.length ? ringPhone ? 'ringing' : 'call' : 'idle'}
+						class='!absolute bottom-[20rem] left-[40rem]'
+						onEnd={() => processPlotEvent()}
+						dialogue={dialogue}/>
 
-					{/* Left (Game) Area */}
-					<div class='relative'>
-						<div class='block text-green-300 font-computer w-[28rem] h-[17rem] p-3 pt-2 pb-0
-							absolute bottom-[30rem] left-20 z-0 flex flex-col font-bold antialiased'>
-							<div class='flex justify-between border-b-2 border-green-300 mb-2'>
-								<p>Order #{Math.floor(Math.random() * 1000)}</p>
-								<p>Purchased 23/10/2023</p>
-							</div>
+					{level !== null && <LevelContext.Provider value={levelContext!}>
+						{/* Computer Screen */}
+						{uiVisible.has('computer') && <ComputerScreen randVal={randVal} state={computerState}
+							current={currentComplete} quota={quotas[Math.min(Math.floor(time / TIME_MINUTES), quotas.length - 1)]}/>}
 
-							<div class='flex justify-start gap-2 items-center mb-2'>
-								<div class='w-7 h-7 bg-green-400 rounded-full'/>
-								<p>{customer}</p>
-							</div>
-
-							<div class='flex justify-start max-w-full overflow-hidden gap-2 mb-2'>
-								<div class='w-20 h-20 bg-green-400 rounded shrink-0'/>
-
-								<div class='flex flex-col gap-3 max-w-full overflow-hidden'>
-									<p class='overflow-hidden line-clamp-2'>{product.name}</p>
-
-									<div class='flex gap-3 items-center'>
-										<p class='text-sm'>{company.name}</p>
-
-										<div class='flex gap-2'>
-											<div class={merge('w-4 h-4 rounded-full',
-												company.rating >= 1 ? 'bg-green-500' : company.rating >= 0.5
-													? 'bg-green-700' : 'bg-green-900')}></div>
-											<div class={merge('w-4 h-4 rounded-full',
-												company.rating >= 2 ? 'bg-green-500' : company.rating >= 1.5
-													? 'bg-green-700' : 'bg-green-900')}></div>
-											<div class={merge('w-4 h-4 rounded-full',
-												company.rating >= 3 ? 'bg-green-500' : company.rating >= 2.5
-													? 'bg-green-700' : 'bg-green-900')}></div>
-											<div class={merge('w-4 h-4 rounded-full',
-												company.rating >= 4 ? 'bg-green-500' : company.rating >= 3.5
-													? 'bg-green-700' : 'bg-green-900')}></div>
-											<div class={merge('w-4 h-4 rounded-full',
-												company.rating >= 5 ? 'bg-green-500' : company.rating >= 4.5
-													? 'bg-green-700' : 'bg-green-900')}></div>
-										</div>
-									</div>
-
-								</div>
-
-							</div>
-
-							<p class='border-b-2 border-green-300 mb-2'>Reviews</p>
-							<p class='text-sm line-clamp-3'>{product.reviews[Math.floor(Math.random() * product.reviews.length)]}</p>
-						</div>
-
-						<div class='overflow-auto w-auto h-auto absolute left-1/2 -translate-x-1/2'
-							style={{ bottom: `${64 + (product.yOffset ?? 0) * 4}px` }}>
+						{/* Product */}
+						<div key={level} class='overflow-auto w-auto h-auto absolute left-1/2 animate-product_on
+						-translate-x-1/2 will-change-transform'
+							style={{ bottom: `${56 + (level.product.yOffset ?? 0) * 4}px` }}>
 							<ProductComponent/>
 						</div>
 
-					</div>
+					</LevelContext.Provider>}
 
-					{/* Right (Info) Area */}
+					{/* Old Product */}
+					{oldLevel !== null && <LevelContext.Provider value={oldLevelContext!}>
+						<div key={oldLevel} class='overflow-auto w-auto h-auto absolute left-1/2
+							animate-product_off left-1/2 -translate-x-1/2 will-change-transform'
+							style={{ bottom: `${56 + (oldLevel.product.yOffset ?? 0) * 4}px` }}>
+							<ProductComponent/>
+						</div>
+					</LevelContext.Provider>}
+
+					{/* Timer */}
+					{uiVisible.has('clock') && <Clock time={time}
+						quota={quotas[Math.min(Math.floor(time / TIME_MINUTES), quotas.length - 1)]}
+						current={currentComplete}/>}
+				</div>
+
+				{/* Right (Info) Area */}
+				{level !== null && uiVisible.has('info') && <LevelContext.Provider value={levelContext!}>
 					<div class='relative grid overflow-hidden max-h-full'>
 						<Info>
-							<Checklist onSelectProblem={handleSelectProblem}/>
+							{uiVisible.has('checklist') && <Checklist onSelectProblem={handleSelectProblem}/>}
+							{uiVisible.has('approvedeny') && <ApproveDenyButtons
+								onApprove={handleApprove} onDeny={handleDeny}
+								allowApprove={uiVisible.has('approve') && flaggedProblems.size >= requiredEvidence && oldLevel === null}
+								allowDeny={uiVisible.has('deny') && oldLevel === null}/>
+							}
 						</Info>
 					</div>
-
-				</div>
+				</LevelContext.Provider>}
 			</div>
-		</ProductContext.Provider>
+		</div>
 	);
 }

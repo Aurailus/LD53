@@ -55,8 +55,7 @@ module.exports = {
           <head>
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@700&display=swap" rel="stylesheet">
-            <meta name='viewport' content='width=device-width, initial-scale=1'>
+            <link href="https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Roboto+Mono:wght@100;700&display=swap" rel="stylesheet">
             <style>
               body {
                 margin: 0;

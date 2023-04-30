@@ -1,47 +1,42 @@
 import { FunctionalComponent, createContext } from 'preact';
 import { useContext } from 'preact/hooks';
+import { Company } from '../company/Company';
 
 export interface Product {
 	name: string;
-
 	component: FunctionalComponent;
-
 	yOffset?: number;
-
 	reviews: string[];
-
+	image: string;
 	problems: { identifier: string, description: string }[];
+	generateProblems: (difficulty: number, requredProblems: number) => string[];
 };
 
-export type ActiveProblems = {
-	identifier: string;
-	found: boolean;
-}[];
-
-export type Tool = {
-	type: 'hand'
-} | {
-	type: 'test',
-	problem: string
-};
-
-export interface ProductContext {
-	product: Product;
-	problems: ActiveProblems;
-	tool: Tool;
-
-	onProblem: (problem: string) => void;
-	setTool: (tool: Tool) => void;
+export type AdvancedProblem = {
+	identifier: string, description: string, conflicts?: string[], special?: boolean;
 }
 
-export const ProductContext = createContext<ProductContext>({
-	product: null as any,
-	problems: [],
-	tool: { type: 'hand' },
-	onProblem: () => {},
-	setTool: () => {}
-});
+export function generateNonConflictingProblems(
+	problems: AdvancedProblem[]) {
 
-export const useProduct = (): ProductContext => {
-	return useContext(ProductContext);
+	return (difficulty: number, requiredProblems: number) => {
+		const problemsSet = new Set<string>();
+		const nonSpecial = problems.filter(p => !p.special).length;
+		const numEvidence =  Math.min(Math.floor(Math.pow(Math.random(), 2)
+			* 3 * (1/Math.max(difficulty, 1))) + requiredProblems, nonSpecial);
+		while (problemsSet.size < numEvidence) {
+			const newProblem = problems[Math.floor(Math.random() * problems.length)];
+			if (newProblem.special || problemsSet.has(newProblem.identifier)) continue;
+			let conflicts = false;
+			for (let conflicting of (newProblem.conflicts ?? [])) {
+				if (problemsSet.has(conflicting)) {
+					conflicts = true;
+					break;
+				}
+			}
+			if (conflicts) continue;
+			problemsSet.add(newProblem.identifier);
+		}
+		return [...problemsSet.keys()];
+	};
 }
