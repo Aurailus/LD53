@@ -308,8 +308,8 @@ export function PlotScene(props: Props) {
 		<div class={merge('w-screen h-screen overflow-hidden flex flex-col overflow-hidden',
 			sceneState === 'in' ? 'animate-scene_in' : 'animate-scene_out')}>
 			{/* Main Area */}
-			<div class='w-screen h-auto flex-grow overflow-hidden grid bg-[size:1920px,1080px] overflow-hidden relative'
-				style={{ backgroundImage: `url(${timeOfDay === 'day' ? background_day : timeOfDay === 'snow' ? background_snow : background_night})`,
+			<div class='w-screen h-auto flex-grow overflow-hidden grid bg-[size:2400px,1400px] overflow-hidden relative'
+				style={{ backgroundImage: `url(${timeOfDay === 'day' ? background_day : timeOfDay === 'snow' ? background_snow : background_night})`, backgroundColor: '#525667', backgroundRepeat: 'no-repeat',
 					backgroundPosition: 'bottom left', gridTemplateColumns: '1fr min(33vw, 496px)' }}>
 
 				<div class={merge('absolute left-0 right-0 h-64 w-[300vw] bg-contain interact-none max-w-none',
@@ -349,10 +349,9 @@ export function PlotScene(props: Props) {
 					</LevelContext.Provider>}
 
 					{/* Time warning overlay */}
-					{waveTicksLeft <= 5 &&
+					{waveTicksLeft <= 5 && waveTicksLeftBase !== 0 &&
 						<div class='flex fixed inset-0 items-center justify-center will-change-transform interact-none'>
-							<span key={Math.floor(waveTicksLeft)} class={merge('text-5xl animate-time_flash m-0',
-								complete >= currentQuota ? 'text-green-200/40' : 'text-red-500/40')}>{waveTicksLeft}
+							<span key={Math.floor(waveTicksLeft)} class={merge('text-5xl animate-time_flash m-0, text-red-500/40')}>{waveTicksLeft}
 								</span>
 						</div>
 					}

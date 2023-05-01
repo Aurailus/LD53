@@ -23,7 +23,7 @@ export function* newProduct(): Plot {
 
 	yield {
 		type: 'dialogue', ring: true, endTone: true, text: [
-			'Thank Amazom it\'s friday!',
+			'Thank Amozom it\'s friday!',
 			'I\'m ready to go home.',
 		]
 	};
