@@ -6,6 +6,7 @@ import image_clipboard from '@res/room/clipboard.png';
 import image_product_frame from '@res/room/product_frame.png';
 import image_clipboard_mark from '@res/room/clipboard_mark.png';
 
+
 import { merge } from './Util';
 
 
@@ -15,6 +16,10 @@ interface Props {
 
 export function Checklist(props: Props) {
 	const level = useLevel();
+
+	function handleSelectProblem(identifier: string) {
+		props.onSelectProblem(identifier);
+	}
 
 	return (
 		<div class='w-[480px] aspect-[120/150] shrink-0 bg-cover p-16 relative font-computer font-black'
@@ -38,7 +43,7 @@ export function Checklist(props: Props) {
 				{level.product.problems.map((prob, i) =>
 					<li
 						key={prob.identifier}
-						onClick={() => props.onSelectProblem(prob.identifier)}
+						onClick={() => handleSelectProblem(prob.identifier)}
 						class={merge('cursor-pointer text-black flex gap-3 relative group py-0.5')}>
 						<div class='w-2 h-2 mt-2.5 bg-stone-500 rounded-full shrink-0'></div>
 						<p class='font-computer opacity-90 text-stone-900 font-black text-lg select-none'>{level.product.problems.find(p => p.identifier == prob.identifier)!.description}</p>

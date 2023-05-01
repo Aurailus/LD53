@@ -42,6 +42,7 @@ export function* intro(): Plot {
 	yield { type: 'await', what: 'time', time: 1000 };
 	yield { type: 'ui', key: 'computer', show: true };
 	yield { type: 'required_evidence', amount: 0 };
+	yield { type: 'set_score_expectation', score: 0 };
 
 	yield {
 		type: 'dialogue',
@@ -176,7 +177,7 @@ export function* intro(): Plot {
 			'Notice how I circled the mistakes on the product specification?',
 			'Despite the benevolence of our corporate overlords, the higher-ups still want us to provide evidence for our decisions.',
 			'So make sure you\'re always thorough when you\'re checking the products,',
-			'And that you mark down any evidence you find BEFORE you approve the return.',
+			'And that you mark at least one problem you find BEFORE you approve the return.',
 			'Otherwise, I might have to write you up, and I don\'t wanna do that!',
 			'Now go ahead and approve it.'
 		]
@@ -417,11 +418,18 @@ export function* intro(): Plot {
 			'Well, It\'s been great meeting you, but it\'s time for me to clock out.',
 			'You\'ll be fine on your own, right?',
 			'Alright, good luck!',
-			'...',
-			'...',
+		]
+	};
+
+	yield { type: 'await', what: 'time', time: 400 };
+
+	yield {
+		type: 'dialogue',
+		endTone: true,
+		text: [
 			'Oh, and one more thing.',
 			'Amozom has a pretty strict quota for the number of returns you need to process every hour.',
-			'So watch the clock! If you don\'t meet your quota, you\'ll be fired.',
+			'So watch the clock! If it hits zero before you meet your quota, you\'ll be reprimanded.',
 			'Alright, cya!'
 		]
 	}

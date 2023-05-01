@@ -34,15 +34,16 @@ export function Plushie() {
 		<div class={merge('w-128 aspect-square relative', pr.has('color') && 'saturate-200')}>
 			{beheaded ?
 				<Fragment>
-				<img class='absolute inset-0 w-full' src={image_base_beheaded}/>
-					{pr.has('bomb') && <ClickCheck class='!absolute inset-0 w-full' src={image_mod_bomb}
+				<img class='absolute inset-0 w-full select-none' src={image_base_beheaded}/>
+					{pr.has('bomb') && <ClickCheck class='!absolute inset-0 w-full select-none' src={image_mod_bomb}
 						onClick={() => console.log('BOMB!!!')}/>}
-					{pr.has('tag') && <img class='!absolute inset-0 w-full' src={image_mod_tag}/>}
+					{pr.has('tag') && <img class='!absolute inset-0 w-full select-none' src={image_mod_tag}/>}
 					<img class='absolute inset-0 w-full interact-none'
 						src={pr.has('tail') ? image_mod_tail_wrong : image_mod_tail}/>
 				</Fragment> :
 				<Fragment>
-					<ClickCheck class='!absolute inset-0 w-full' src={image_base} onClick={() => setBeheaded(pr.has('bomb'))}/>
+					<ClickCheck class='!absolute inset-0 w-full select-none'
+						src={image_base} onClick={() => setBeheaded(pr.has('bomb'))}/>
 					<img class='!absolute inset-0 w-full interact-none'
 						src={pr.has('ears') ? image_mod_ear_wrong : image_mod_ear}/>
 					{pr.has('eyes') && <img class='!absolute inset-0 w-full interact-none' src={image_mod_eyes}/>}

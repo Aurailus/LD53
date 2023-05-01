@@ -1,17 +1,22 @@
 import { Fragment, h } from 'preact';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { merge } from './Util';
+import { Howl } from 'howler';
 
 import image_base from '@res/phone/base.png';
 import image_receiver from '@res/phone/receiver.png';
 import image_receiver_1 from '@res/phone/receiver_1.png';
 import image_receiver_2 from '@res/phone/receiver_2.png';
 import image_textbox from '@res/phone/textbox.png';
-import { useEffect, useRef, useState } from 'preact/hooks';
 
+import sound_phone_call from '@res/sound/phone_call.wav';
+import sound_phone_end from '@res/sound/phone_end.wav';
+import sound_speak from '@res/sound/speak.wav';
 interface Props {
 	state: 'idle' | 'ringing' | 'call';
 	dialogue: string[];
 	canNext?: boolean;
+	endTone: boolean;
 
 	onPickup?: () => void;
 	onNextDialogue?: () => void;
@@ -51,6 +56,7 @@ export function Phone(props: Props) {
 			setDialogueStep(-15);
 			if (dialoguePage >= props.dialogue.length - 1) {
 				setPhoneState('idle');
+				if (props.endTone) new Howl({ src: [ sound_phone_end ], volume: 0.50,  }).play();
 				props.onEnd?.();
 			}
 		}
@@ -74,7 +80,11 @@ export function Phone(props: Props) {
 
 		if (!ringingRef.current) {
 			ringingRef.current = setInterval(() => {
-				setRingingState(state => (state + 1) % 3);
+				setRingingState(state => {
+					if (phoneState === 'ringing' && state < 50 && state % 21 === 0)
+						new Howl({ src: [ sound_phone_call ], volume: 0.05,  }).play();
+					return (state + 1);
+				});
 			}, 200) as any as number;
 		}
 	}, [ phoneState, dialogueStep, dialoguePage ]);
@@ -95,9 +105,10 @@ export function Phone(props: Props) {
 			(lastChar === ',' ? 3 : 1) *
 			(lastChar === ' ' ? 0 : 1);
 
-		const timeout = setTimeout(() => {
-			setDialogueStep(step => step + 1);
-		}, delay);
+		if (delay === DIALOGUE_STEP_SPEED) new Howl({ src: [ sound_speak ], volume: 0.15,
+			rate: Math.random() * 0.2 + 0.9  }).play();
+
+		const timeout = setTimeout(() => setDialogueStep(step => step + 1), delay);
 
 		return () => clearTimeout(timeout);
 	}, [ dialogueStep, dialoguePage, phoneState ]);
@@ -110,9 +121,9 @@ export function Phone(props: Props) {
 	return (
 		<div class={merge('w-[268px] h-[188px] relative cursor-pointer select-none', props.class)} onClick={handlePickup}>
 			<img class='absolute inset-0 w-full h-full' src={image_base}/>
-			{ringingState == 0 && <img class='absolute inset-0 w-full h-full interact-none' src={image_receiver}/>}
-			{ringingState == 1 && <img class='absolute inset-0 w-full h-full interact-none' src={image_receiver_1}/>}
-			{ringingState == 2 && <img class='absolute inset-0 w-full h-full interact-none' src={image_receiver_2}/>}
+			{(ringingState % 3) == 0 && <img class='absolute inset-0 w-full h-full interact-none' src={image_receiver}/>}
+			{(ringingState % 3) == 1 && <img class='absolute inset-0 w-full h-full interact-none' src={image_receiver_1}/>}
+			{(ringingState % 3) == 2 && <img class='absolute inset-0 w-full h-full interact-none' src={image_receiver_2}/>}
 
 			{phoneState === 'call' && <div class='fixed z-50 inset-0' onClick={() => handleAdvanceText()}/>}
 

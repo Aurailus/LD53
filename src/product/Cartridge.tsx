@@ -5,6 +5,9 @@ import { useState } from 'preact/hooks';
 import { AdvancedProblem, Product, generateNonConflictingProblems } from './Product';
 import { useLevel } from '../Level';
 
+import { Howl } from 'howler';
+import sound_product_interact from '@res/sound/product_interact.wav';
+
 import image_reference from '@res/cartridge/reference.png';
 import image_base from '@res/cartridge/base.png';
 import image_mod_art from '@res/cartridge/mod_art.png';
@@ -34,11 +37,16 @@ export function Cartridge() {
 	const { problemsSet: pr } = useLevel();
 	const [ state, setState ] = useState<'front' | 'back' | 'inside'>('front');
 
+	function interact(side: 'front' | 'back' | 'inside') {
+		setState(side);
+		new Howl({ src: sound_product_interact, volume: 1, rate: Math.random() * 0.4 + 0.8 }).play();
+	}
+
 	return (
 		<div class={merge('w-128 aspect-square relative', pr.has('color') && 'saturate-200')}>
 			{state === 'front' ?
 				<Fragment>
-					<ClickCheck class='!absolute inset-0 w-full' src={image_base} onClick={() => setState('back')}/>
+					<ClickCheck class='!absolute inset-0 w-full select-none' src={image_base} onClick={() => interact('back')}/>
 					{pr.has('art') && <img class='!absolute inset-0 w-full interact-none' src={image_mod_art}/>}
 					{pr.has('console') && <img class='!absolute inset-0 w-full interact-none' src={image_mod_console}/>}
 					{pr.has('rating') && <img class='!absolute inset-0 w-full interact-none' src={image_mod_mature}/>}
@@ -47,12 +55,12 @@ export function Cartridge() {
 				</Fragment> :
 				state === 'back' ?
 				<Fragment>
-					<ClickCheck class='!absolute inset-0 w-full' src={image_back} onClick={() => setState('inside')}/>
+					<ClickCheck class='!absolute inset-0 w-full select-none' src={image_back} onClick={() => interact('inside')}/>
 					{pr.has('cracker') && <img class='absolute inset-0 w-full interact-none' src={image_back_cracker}/>}
 					{!pr.has('brand') && <img class='!absolute inset-0 w-full interact-none' src={image_mod_brand}/>}
 				</Fragment> :
 				<Fragment>
-					<ClickCheck class='absolute inset-0 w-full' src={image_inside} onClick={() => setState('front')}/>
+					<ClickCheck class='absolute inset-0 w-full select-none' src={image_inside} onClick={() => interact('front')}/>
 					{!pr.has('circuitboard') && <img class='!absolute inset-0 w-full interact-none'
 						src={image_mod_circuitboard}/>}
 					{pr.has('cracker') && <img class='absolute inset-0 w-full interact-none'
@@ -67,6 +75,7 @@ const product: Product = {
 	name: 'Nontondo Video Game Cartridge Franchise Game Play 2018 Edition New',
 	component: Cartridge,
 	problems,
+	yOffset: -12,
 	image: image_reference,
 	reviews: [
 		'I hate pokemon 1/5'

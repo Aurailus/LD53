@@ -4,6 +4,7 @@ export type Action = {
 	type: 'dialogue';
 	text: string[];
 	ring?: boolean;
+	endTone?: boolean;
 } | {
 	type: 'ui';
 	key: string;
@@ -30,6 +31,12 @@ export type Action = {
 } | {
 	type: 'set_wave'
 	wave: number
-}
+} | {
+	type: 'set_score_expectation',
+	score: number
+} | {
+	type: 'set_time_of_day',
+	time: 'day' | 'night' | 'snow';
+};
 
 export type Plot = Generator<Action, void, any>;

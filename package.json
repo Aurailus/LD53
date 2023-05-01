@@ -13,6 +13,7 @@
     "@babel/plugin-transform-react-jsx": "^7.21.5",
     "@babel/preset-typescript": "^7.21.5",
     "@types/gl-matrix": "^3.2.0",
+    "@types/howler": "^2.2.7",
     "@types/seedrandom": "^3.0.5",
     "autoprefixer": "^10.4.14",
     "babel-loader": "^9.1.2",
@@ -29,6 +30,7 @@
   },
   "dependencies": {
     "gl-matrix": "^3.4.3",
+    "howler": "^2.2.3",
     "preact": "^10.13.2",
     "seedrandom": "^3.0.5",
     "tailwindcss": "^3.3.2"

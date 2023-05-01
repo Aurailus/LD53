@@ -1,12 +1,11 @@
-import { Level, LevelResult } from "../Level";
+import { LevelResult } from "../Level";
 import { getCompany } from "../company/Company";
 import { getName } from "../customer/Customer";
 import Cartridge from "../product/Cartridge";
 import Plushie from "../product/Plushie";
-import Headset from "../product/Headset";
 import { Action, Plot }  from './Plot';
 
-export function* secondday(): Plot {
+export function* newProduct(): Plot {
 	yield { type: 'ui', key: 'info', show: true };
 	yield { type: 'ui', key: 'computer', show: true };
 	yield { type: 'ui', key: 'checklist', show: true };
@@ -18,8 +17,18 @@ export function* secondday(): Plot {
 	yield { type: 'ui', key: 'clock', show: true };
 	yield { type: 'required_evidence', amount: 1 };
 	yield { type: 'set_wave', wave: 0 };
+	yield { type: 'set_wave_ticks', ticks: 0 };
+	yield { type: 'set_quota', quotas: [ 3, 4, 5, 8, 10 ] };
+	yield { type: 'set_score_expectation', score: 120 };
+
+	yield {
+		type: 'dialogue', ring: true, endTone: true, text: [
+			'Thank Amazom it\'s friday!',
+			'I\'m ready to go home.',
+		]
+	};
+
 	yield { type: 'set_wave_ticks', ticks: 20 };
-	yield { type: 'set_quota', quotas: [ 3, 4, 5, 10, 10 ] };
 
 	let wave = 0;
 
@@ -29,8 +38,8 @@ export function* secondday(): Plot {
 			level: {
 				company: getCompany(),
 				customer: getName(),
-				problems: Math.random() <= 0.1 ? [] : Headset.generateProblems(wave, 1),
-				product: Headset
+				problems: Math.random() <= 0.1 ? [] : Plushie.generateProblems(wave, 1),
+				product: Plushie
 			}
 		} as Action;
 
@@ -101,7 +110,7 @@ export function* secondday(): Plot {
 		if (wave !== res.wave) break;
 	}
 
-	yield { type: 'dialogue', text: [
+	yield { type: 'dialogue', endTone: true, text: [
 		'Alright, returns are piling up, so you\'re gonna have to get back to work!',
 		'Good luck!'
 	] };
@@ -126,13 +135,13 @@ export function* secondday(): Plot {
 		if (wave !== res.wave) break;
 	}
 
+	yield { type: 'set_wave', wave: 100 };
 	yield { type: 'set_wave_ticks', ticks: 0 };
 
-	yield { type: 'dialogue', ring: true, text: [
+	yield { type: 'dialogue', ring: true, endTone: true, text: [
 		'That\'s all for today!',
 		'Great job, I\'ll be seeing you tomorrow.'
 	] };
 
-
-
+	yield { type: 'await', what: 'time', time: 1000 };
 }

@@ -17,6 +17,9 @@ module.exports = {
         'conveyor_move': 'conveyor_move 1s ease-in-out 1 forwards',
         'screen_activate': 'screen_activate 0.1s ease-in-out 1 forwards',
         'time_flash': 'time_flash 0.5s ease-in-out 1 forwards',
+        'scene_in': 'scene_in 0.5s ease-in-out 1 forwards',
+        'scene_out': 'scene_out 0.5s ease-in-out 1 forwards',
+        'clipboard_in': 'clipboard_in 2.5s cubic-bezier(.11,.74,.41,1.06) 1 forwards',
       },
       keyframes: {
         'dialogue_letter_in': {
@@ -44,6 +47,19 @@ module.exports = {
           '0%': { opacity: 0, transform: 'scale(20)' },
           '50%': { opacity: 1, transform: 'scale(15)' },
           '100%': { opacity: 0, transform: 'scale(10)' },
+        },
+        'scene_in': {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
+        'scene_out': {
+          '0%': { opacity: 1 },
+          '100%': { opacity: 0 },
+        },
+        'clipboard_in': {
+          '0%': { opacity: 0, transform: 'translateY(512px)' },
+          '70%': { opacity: 0, transform: 'translateY(512px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
         }
       }
 		},
