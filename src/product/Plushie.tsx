@@ -23,7 +23,7 @@ const problems: AdvancedProblem[] = [
 	{ identifier: 'eyes', description: 'Has button eyes.', conflicts: [ 'beheaded' ] },
 	{ identifier: 'beheaded', description: 'No parts missing.', conflicts: [ 'eyes', 'ears', 'bomb' ] },
 	{ identifier: 'tag', description: 'Has a \'PTC\' tag.' },
-	{ identifier: 'bomb', description: 'Is not a bomb.', conflicts: [ 'beheaded' ], special: true }
+	// { identifier: 'bomb', description: 'Is not a bomb.', conflicts: [ 'beheaded' ], special: true }
 ]
 
 export function Plushie() {

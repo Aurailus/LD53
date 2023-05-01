@@ -115,7 +115,7 @@ export function* newProduct(): Plot {
 		'Good luck!'
 	] };
 
-	yield { type: 'set_wave_ticks', ticks: 40 };
+	yield { type: 'set_wave_ticks', ticks: 80 };
 
 	while (true) {
 		const type = Math.random() < 0.6 ? Plushie : Cartridge;

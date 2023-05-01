@@ -110,7 +110,7 @@ export function* getFired(): Plot {
 			'Oh well!',
 			'You win some, you lose some.',
 			'See, I lost out too, here.',
-			'Now I have train a new guy.',
+			'Now I have to train a new guy.',
 			'And I don\'t wanna do that!',
 			'So don\'t feel too bad.',
 			'We all go through things sometimes.'

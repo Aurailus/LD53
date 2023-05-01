@@ -161,7 +161,7 @@ export function EndPlotScene(props: Props) {
 					<p class='text-stone-800 text-2xl text-left'>{props.result.subScore}</p>
 				</div>
 				<div class='grid grid-cols-3 gap-8'>
-					<p class='text-stone-600 text-2xl text-right col-span-2'>Fumble Bonus</p>
+					<p class='text-stone-600 text-2xl text-right col-span-2'>Careful Bonus</p>
 					<p class='text-stone-800 text-2xl text-left'>{props.result.mistakeBonus}</p>
 				</div>
 

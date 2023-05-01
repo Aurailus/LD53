@@ -17,8 +17,8 @@ export function* onYourOwn(): Plot {
 	yield { type: 'ui', key: 'clock', show: true };
 	yield { type: 'required_evidence', amount: 1 };
 	yield { type: 'set_wave', wave: 0 };
-	yield { type: 'set_quota', quotas: [ 3, 3, 4, 4, 5 ] };
-	yield { type: 'set_score_expectation', score: 175 };
+	yield { type: 'set_quota', quotas: [ 3, 3, 4 ] };
+	yield { type: 'set_score_expectation', score: 120 };
 	yield { type: 'set_wave_ticks', ticks: 0 };
 
 	yield {
@@ -53,7 +53,7 @@ export function* onYourOwn(): Plot {
 		if (res.complete >= res.quota) yield { type: 'set_wave', wave: ++wave };
 		if (wave !== res.wave) {
 			wave = Math.max(res.wave, wave);
-			if (wave >= 6) break;
+			if (wave >= 3) break;
 			else yield { type: 'set_wave_ticks', ticks: 25 };
 		}
 	}

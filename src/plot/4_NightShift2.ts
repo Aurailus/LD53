@@ -26,7 +26,7 @@ export function* nightShift2(): Plot {
 	yield { type: 'set_wave_ticks', ticks: 0 };
 	yield { type: 'set_quota', quotas: [ 5, 5, 6, 6, 7, 7  ] };
 	yield { type: 'set_time_of_day', time: 'night' };
-	yield { type: 'set_score_expectation', score: 150 };
+	yield { type: 'set_score_expectation', score: 130 };
 
 	yield {
 		type: 'dialogue',

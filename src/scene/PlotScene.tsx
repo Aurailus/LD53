@@ -52,11 +52,12 @@ export function PlotScene(props: Props) {
 	const [ oldLevel, setOldLevel ] = useState<Level | null>(null);
 	const [ flaggedProblems, setFlaggedProblems ] = useState<Set<string>>(new Set());
 
-	const [ complete, setComplete ] = useState<number>(0);
 	const [ mistakes, setMistakes ] = useState<number>(0);
+	const [ processed, setProcessed] = useState<number>(0);
 	const [ score, setScore ] = useState<number>(0);
 
 	const [ wave, setWave ] = useState(0);
+	const [ complete, setComplete ] = useState<number>(0);
 	const [ waveTicksLeft, setWaveTicksLeft ] = useState(0);
 	const [ waveTicksLeftBase, setWaveTicksLeftBase ] = useState(0);
 	const [ quotas, setQuotas ] = useState<number[]>([ 0, 0, 0, 0 ]);
@@ -89,7 +90,7 @@ export function PlotScene(props: Props) {
 		setWave(w => w + 1);
 		setSceneState('out');
 
-		const mistakeBonus = Math.max(0, 50 - mistakes * 10);
+		const mistakeBonus = Math.max(0, 50 - mistakes * 5);
 		const finalScore = score + mistakeBonus;
 		const ratio = finalScore / scoreExpectation;
 
@@ -100,7 +101,7 @@ export function PlotScene(props: Props) {
 		else if (ratio >= 0.5) grade = 'c';
 
 		setTimeout(() => props.onComplete({
-			complete,
+			complete: processed,
 			mistakes,
 			subScore: score,
 			finalScore,
@@ -132,6 +133,7 @@ export function PlotScene(props: Props) {
 
 		if (result === 'correct') {
 			setComplete(l => l + 1);
+			setProcessed(p => p + 1);
 			setScore(s => s + 1);
 
 			new Howl({ src: [ sound_product_mark ], volume: 0.5 }).play();

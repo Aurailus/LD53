@@ -29,8 +29,8 @@ const problems: AdvancedProblem[] = [
 	{ identifier: 'region', description: 'Has region marker.' },
 	{ identifier: 'seal', description: 'Has seal of approval.' },
 	{ identifier: 'brand', description: 'Has marking on the back.' },
-	{ identifier: 'circuitboard', description: 'Has internal processor chip.', conflicts: [ 'cracker' ] },
-	{ identifier: 'cracker', description: 'Free of food residue.', conflicts: [ 'circuitboard' ], special: true }
+	{ identifier: 'circuitboard', description: 'Has memory chip.', conflicts: [ 'cracker' ] },
+	// { identifier: 'cracker', description: 'Free of food residue.', conflicts: [ 'circuitboard' ], special: true }
 ]
 
 export function Cartridge() {
