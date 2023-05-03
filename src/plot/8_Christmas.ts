@@ -91,7 +91,7 @@ export function* christmas(): Plot {
 	yield { type: 'set_wave_ticks', ticks: 0 };
 	yield {
 		type: 'dialogue', ring: true, endTone: true, text: [
-			'It\'s snowing outsite.',
+			'It\'s snowing outside.',
 			'I\'m gonna go get my children a present.',
 			'Have a nice holiday, kid.'
 		]
